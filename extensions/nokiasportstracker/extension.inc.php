@@ -103,13 +103,18 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 
 	function yield($row)
 	{
+		$note = $row->description;
+		if ($note)
+		{
+			$note = '<br />workout note: '.$note;
+		}
 		$date = strptime($row->startUTC, '%d.%m.%y %H:%M');
 		$timestamp = mktime($date['tm_hour'], $date['tm_min'], 0, 1+$date['tm_mon'], $date['tm_mday'], 1900+$date['tm_year']);
 		return array(
 			'date'         =>  $timestamp,
 			'link'         =>  'http://sportstracker.nokia.com/nts/workoutdetail/index.do?id='.$row->id,
 			'title'        =>  html_entity_decode($row->activity->name.' workout'),
-			'description'  =>  'sajslas sajsl asj alsjas alsa j',
+			'description'  =>  round(($row->distance)/1000, 2).' km in '.$row->duration.$note,
 		);
 	}
 }
