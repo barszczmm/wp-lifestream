@@ -48,6 +48,7 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 		{
 			$data = $this->lifestream->file_get_contents($url);
 			$json = json_decode($data);
+			# json_last_error function is available in PHP 5.3.0 or newer
 			if (strnatcmp(phpversion(),'5.3.0') >= 0)
 			{
 				if (json_last_error() != JSON_ERROR_NONE)
@@ -79,6 +80,7 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 			}
 			$data = $this->lifestream->file_get_contents($url);
 			$json = json_decode($data);
+			# json_last_error function is available in PHP 5.3.0 or newer
 			if (strnatcmp(phpversion(),'5.3.0') >= 0)
 			{
 				if (json_last_error() != JSON_ERROR_NONE)
@@ -118,6 +120,7 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 		);
 	}
 }
+# PHP older than 5.2.0 had no JSON extension bundled by default
 if (strnatcmp(phpversion(),'5.2.0') >= 0)
 {
 	$lifestream->register_feed('Lifestream_NokiaSportsTracker');
