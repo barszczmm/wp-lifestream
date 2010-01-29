@@ -5,7 +5,8 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 	const NAME			= 'Nokia Sports Tracker';
 	const URL			= 'http://sportstracker.nokia.com/';
 	const DESCRIPTION	= '';
-	const AUTHOR		= 'Maciej "barszcz" Marczewski';
+	const LABEL			= 'Lifestream_ExercisesLabel';
+	const AUTHOR		= 'Maciej "barszcz" Marczewski <maciej@marczewski.net.pl>';
 
 	function __toString()
 	{
@@ -49,12 +50,20 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 			$data = $this->lifestream->file_get_contents($url);
 			$json = json_decode($data);
 			# json_last_error function is available in PHP 5.3.0 or newer
-			if (strnatcmp(phpversion(),'5.3.0') >= 0)
+			if (version_compare(PHP_VERSION, '5.3', '>='))
 			{
 				if (json_last_error() != JSON_ERROR_NONE)
 				{
 					$sample = substr($data, 0, 150);
-					throw new Lifestream_Error("Error fetching JSON from ".$url." ...\n(Received: ".$sample.")");
+					throw new Lifestream_FeedFetchError("Error fetching JSON format from ".$url."\n(Received: ".$sample.")");
+				}
+			}
+			else
+			{
+				if (!$data || ($data && ($json === NULL)))
+				{
+					$sample = substr($data, 0, 150);
+					throw new Lifestream_FeedFetchError("Error fetching JSON format from ".$url."\n(Received: ".$sample.")");
 				}
 			}
 		}
@@ -81,12 +90,20 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 			$data = $this->lifestream->file_get_contents($url);
 			$json = json_decode($data);
 			# json_last_error function is available in PHP 5.3.0 or newer
-			if (strnatcmp(phpversion(),'5.3.0') >= 0)
+			if (version_compare(PHP_VERSION, '5.3', '>='))
 			{
 				if (json_last_error() != JSON_ERROR_NONE)
 				{
 					$sample = substr($data, 0, 150);
-					throw new Lifestream_FeedFetchError("Error fetching JSON from {$url} ...\n({$sample})");
+					throw new Lifestream_FeedFetchError("Error fetching JSON format from ".$url."\n(Received: ".$sample.")");
+				}
+			}
+			else
+			{
+				if (!$data || ($data && ($json === NULL)))
+				{
+					$sample = substr($data, 0, 150);
+					throw new Lifestream_FeedFetchError("Error fetching JSON format from ".$url."\n(Received: ".$sample.")");
 				}
 			}
 			foreach ($json as $row)
@@ -105,23 +122,17 @@ class Lifestream_NokiaSportsTracker extends Lifestream_Extension
 
 	function yield($row)
 	{
-		$note = $row->description;
-		if ($note)
-		{
-			$note = '<br />workout note: '.$note;
-		}
 		$date = strptime($row->startUTC, '%d.%m.%y %H:%M');
 		$timestamp = mktime($date['tm_hour'], $date['tm_min'], 0, 1+$date['tm_mon'], $date['tm_mday'], 1900+$date['tm_year']);
 		return array(
 			'date'         =>  $timestamp,
 			'link'         =>  'http://sportstracker.nokia.com/nts/workoutdetail/index.do?id='.$row->id,
-			'title'        =>  html_entity_decode($row->activity->name.' workout'),
-			'description'  =>  round(($row->distance)/1000, 2).' km in '.$row->duration.$note,
+			'title'        =>  $row->activity->name.' ('.round(($row->distance)/1000, 1).' km in '.preg_replace('/ \d{1,2} s/', '', $row->duration).')',
 		);
 	}
 }
 # PHP older than 5.2.0 had no JSON extension bundled by default
-if (strnatcmp(phpversion(),'5.2.0') >= 0)
+if (version_compare(PHP_VERSION, '5.2', '>='))
 {
 	$lifestream->register_feed('Lifestream_NokiaSportsTracker');
 }
